@@ -14,6 +14,7 @@ from app.storage.profiles_store import clear_store_config
 from app.callbacks.profiles import ProfileCallback, UpdateKeysCallback, ConfirmUpdateKeys
 from app.domain.xray import get_public_xray_key
 from app.profiles.config import rotate_profile_keys
+from app.settings.flags import AutoRotateState
 
 
 
@@ -127,10 +128,28 @@ async def show_settings(call: CallbackQuery):
     await call.message.edit_text(text="Настройки:",reply_markup=settings_func())
 
 
-@router.callback_query(F.data == "autoUpdateKeys")
-async def show_settings_auto_update_keys(call: CallbackQuery):
-    await call.answer()
-    await call.message.edit_text(text="Настройки автообновления ключей:", reply_markup=settings_autoUpdateKeys())
+@router.callback_query(F.data == "auto_update_keys")                                                                                                                                                                                            
+async def show_settings_auto_update_keys(call: CallbackQuery, auto_rotate_state: AutoRotateState):                                                                                                                                            
+      await call.answer()
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                
+      await call.message.edit_text(                                                                                                                                                                                                             
+          text="Настройки автообновления ключей:",                                                                                                                                                                    
+          reply_markup=settings_autoUpdateKeys(auto_rotate_state.enabled)                                                                                                                                                                       
+      )        
+
+
+@router.callback_query(F.data == "on_off_auto_update_keys")
+async def on_off_auto_update_keys(call: CallbackQuery, auto_rotate_state: AutoRotateState):
+    auto_rotate_state.enabled = not auto_rotate_state.enabled
+
+    status_text = "вкючено" if auto_rotate_state.enabled else "выключено"
+
+    await call.answer(f"Автообновление {status_text}")
+
+    await call.message.edit_text(
+        text="Настройки автообновления ключей:",
+        reply_markup=settings_autoUpdateKeys(auto_rotate_state.enabled)
+    )
 
 
 @router.callback_query(ProfileCallback.filter())

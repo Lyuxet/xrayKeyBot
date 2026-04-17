@@ -12,6 +12,7 @@ from app.storage.profiles_store import set_profile
 from app.domain.time import seconds_until_next_msk
 from app.profiles.config import auto_rotate_keys_task
 from app.security import OwnerOnlyMiddleware
+from app.settings.flags import AutoRotateState
 
 logging.basicConfig(
     level=logging.INFO,
@@ -40,12 +41,16 @@ async def main():
 
     client = RemnaClient(base_url=config.remna_base_url, token=config.remna_token)
     await client.start()
+
+    auto_rotate_state = AutoRotateState(enabled=True)
+
     dp.workflow_data["remna"] = client
+    dp.workflow_data["auto_rotate_state"] = auto_rotate_state
 
     dp.include_router(setup_routers())
 
     logger.info("Запускаем авто обновление ключей")
-    auto_task = asyncio.create_task(auto_rotate_keys_task(client))
+    auto_task = asyncio.create_task(auto_rotate_keys_task(client, auto_rotate_state))
 
 
     try:

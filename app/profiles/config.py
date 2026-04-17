@@ -7,6 +7,8 @@ from app.storage.profiles_store import (get_profile,
                                         set_profile)
 from app.domain.xray import generate_xray_keys
 from app.domain.time import seconds_until_next_msk
+from app.settings.flags import AutoRotateState
+
 
 
 import logging
@@ -94,10 +96,14 @@ async def rotate_profile_keys(uuid: str, remna: RemnaClient) -> tuple[str, str]:
 
     return new_public_key, new_private_key
 
-
-async def auto_rotate_keys_task(remna: RemnaClient):
+async def auto_rotate_keys_task(remna: RemnaClient, state:AutoRotateState):
     while True:
         try:
+
+            if not state.enabled:
+                await asyncio.sleep(30)
+                logger.info("Автообновления выключены")
+                continue
 
             run_time = time(hour=3, minute=-0, second=0)
             sleep_seconds = seconds_until_next_msk(run_time)
@@ -108,9 +114,18 @@ async def auto_rotate_keys_task(remna: RemnaClient):
                 next_run_at.strftime("%Y-%m-%d %H:%M:%S")
             )
 
-            await asyncio.sleep(sleep_seconds)
+            while sleep_seconds > 0:
+                if not state.enabled:                                                                                                                                                                                                         
+                    break  
+                
+                step = min(30, sleep_seconds)
+                await asyncio.sleep(step)                                                                                                                                                                                                     
+                sleep_seconds -= step    
 
-            logger.info("Запуск автоматического обновления ключей в 03:00 MSK")
+            if not state.enabled:                                                                                                                                                                                                             
+                  continue  
+
+            logger.info("Запуск автоматического обновления ключей")
 
             profiles = await remna.list_profiles()
             if not profiles:

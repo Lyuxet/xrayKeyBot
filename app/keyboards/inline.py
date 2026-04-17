@@ -1,5 +1,6 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from app.callbacks.profiles import ProfileCallback, UpdateKeysCallback, ConfirmUpdateKeys
+from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 def menu_kb() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=[
@@ -10,17 +11,29 @@ def menu_kb() -> InlineKeyboardMarkup:
 
 def settings_func() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="Автообновления ключей", callback_data="autoUpdateKeys")],
+        [InlineKeyboardButton(text="Автообновления ключей", callback_data="auto_update_keys")],
         [InlineKeyboardButton(text="Вернуться в меню", callback_data="menu")]
     ])
 
 
-def settings_autoUpdateKeys() -> InlineKeyboardMarkup:
-    return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="Включить автообновление ключей", callback_data="onOffAutoUpdateKeys")],
-        [InlineKeyboardButton(text="Задать время обновления ключей", callback_data="setTimeUpdateKeys")],
-        [InlineKeyboardButton(text="Вернуться к настройкам", callback_data="show_settings")]
-    ])
+def settings_autoUpdateKeys(enabled: bool) -> InlineKeyboardMarkup:
+    builder = InlineKeyboardBuilder()
+    button_text = "Выключить автообновление" if enabled else "Включить автообновление"
+
+    builder.row(
+        InlineKeyboardButton(
+            text=button_text,
+            callback_data="on_off_auto_update_keys"
+        )
+    )
+    builder.row(                                                                                                                                                                                                                              
+          InlineKeyboardButton(                                                                                                                                                                                                                 
+              text="Назад",                                                                                                                                                                                                                     
+              callback_data="show_settings"                                                                                                                                                                                                     
+        )                                                                                                                                                                                                                                     
+    )   
+    return builder.as_markup()                     
+   
 
 def back_to_menu_kb() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=[
