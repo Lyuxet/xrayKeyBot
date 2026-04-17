@@ -4,7 +4,22 @@ from app.callbacks.profiles import ProfileCallback, UpdateKeysCallback, ConfirmU
 def menu_kb() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="Показать все доступные профили", callback_data="show_profiles")],
-        [InlineKeyboardButton(text="Пинг", callback_data="ping")]
+        [InlineKeyboardButton(text="Настройки", callback_data="show_settings")]
+    ])
+
+
+def settings_func() -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="Автообновления ключей", callback_data="autoUpdateKeys")],
+        [InlineKeyboardButton(text="Вернуться в меню", callback_data="menu")]
+    ])
+
+
+def settings_autoUpdateKeys() -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="Включить автообновление ключей", callback_data="onOffAutoUpdateKeys")],
+        [InlineKeyboardButton(text="Задать время обновления ключей", callback_data="setTimeUpdateKeys")],
+        [InlineKeyboardButton(text="Вернуться к настройкам", callback_data="show_settings")]
     ])
 
 def back_to_menu_kb() -> InlineKeyboardMarkup:

@@ -5,6 +5,7 @@ import logging
 
 from app.keyboards.inline import menu_kb, back_to_menu_kb, generate_profiles_button
 from app.keyboards.inline import buttons_profiles, confirm_change_keys
+from app.keyboards.inline import settings_func, settings_autoUpdateKeys
 from app.services.remna_client import RemnaClient
 from app.services.remna_client import RemnaApiError
 from app.storage.profiles_store import set_keys, clear_keys
@@ -34,11 +35,14 @@ async def cb_show_profiles(call: CallbackQuery, remna: RemnaClient):
         profiles = await remna.list_profiles()
     except RemnaApiError as e:
         await call.message.edit_text(f"Ошибка:\n{e}", reply_markup=back_to_menu_kb())
+        await call.answer()
         return
 
     if not profiles:
         await call.message.edit_text("Профилей нет.", reply_markup=back_to_menu_kb())
+        await call.answer()
         return
+    
     profiles_data = []
     
     clear_profile_keys()
@@ -70,6 +74,7 @@ async def cb_show_profiles(call: CallbackQuery, remna: RemnaClient):
     )
 
     await call.message.edit_text(text, reply_markup=generate_profiles_button(profiles_data))
+    await call.answer()
 
 
 @router.callback_query(ConfirmUpdateKeys.filter())
@@ -116,13 +121,16 @@ async def cb_update_profile_keys(
     await call.message.edit_text(text, reply_markup=buttons_profiles(name, uuid))
 
 
-
-
-@router.callback_query(F.data == "ping")
-async def cb_ping(call: CallbackQuery):
-    await call.message.edit_text("pong", reply_markup=back_to_menu_kb())
+@router.callback_query(F.data == "show_settings")
+async def show_settings(call: CallbackQuery):
     await call.answer()
+    await call.message.edit_text(text="Настройки:",reply_markup=settings_func())
 
+
+@router.callback_query(F.data == "autoUpdateKeys")
+async def show_settings_auto_update_keys(call: CallbackQuery):
+    await call.answer()
+    await call.message.edit_text(text="Настройки автообновления ключей:", reply_markup=settings_autoUpdateKeys())
 
 
 @router.callback_query(ProfileCallback.filter())
