@@ -4,21 +4,21 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 def menu_kb() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="Показать все доступные профили", callback_data="show_profiles")],
-        [InlineKeyboardButton(text="Настройки", callback_data="show_settings")]
+        [InlineKeyboardButton(text="🖥Показать все профили", callback_data="show_profiles")],
+        [InlineKeyboardButton(text="⚙️Настройки", callback_data="show_settings")]
     ])
 
 
 def settings_func() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="Автообновления ключей", callback_data="auto_update_keys")],
-        [InlineKeyboardButton(text="Вернуться в меню", callback_data="menu")]
+        [InlineKeyboardButton(text="🔄Автообновления ключей", callback_data="auto_update_keys")],
+        [InlineKeyboardButton(text="⬅️Вернуться в меню", callback_data="menu")]
     ])
 
 
 def settings_autoUpdateKeys(enabled: bool) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
-    button_text = "Выключить автообновление" if enabled else "Включить автообновление"
+    button_text = "🔴Выключить автообновление" if enabled else "🟢Включить автообновление"
 
     builder.row(
         InlineKeyboardButton(
@@ -30,14 +30,14 @@ def settings_autoUpdateKeys(enabled: bool) -> InlineKeyboardMarkup:
     if enabled:
         builder.row(
             InlineKeyboardButton(
-                text="Изменить время автообновления",
+                text="⌚️Изменить время автообновления",
                 callback_data="change_time_auto_update"
             )
         )
 
     builder.row(                                                                                                                                                                                                                              
           InlineKeyboardButton(                                                                                                                                                                                                                 
-              text="Назад",                                                                                                                                                                                                                     
+              text="⬅️Назад",                                                                                                                                                                                                                     
               callback_data="show_settings"                                                                                                                                                                                                     
         )                                                                                                                                                                                                                                     
     )   
@@ -46,13 +46,13 @@ def settings_autoUpdateKeys(enabled: bool) -> InlineKeyboardMarkup:
 def back_to_auto_update_settings_kb():                                                                                                                                                                                
       return InlineKeyboardMarkup(                                                                                                                                                                                      
           inline_keyboard=[                                                                                                                                                                                             
-              [InlineKeyboardButton(text="Назад", callback_data="auto_update_keys")]                                                                                                                                                                                                         
+              [InlineKeyboardButton(text="⬅️Назад", callback_data="auto_update_keys")]                                                                                                                                                                                                         
         ])  
 
 
 def back_to_menu_kb() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="В меню", callback_data="menu")]
+        [InlineKeyboardButton(text="⬅️В меню", callback_data="menu")]
     ])
 
 
@@ -61,16 +61,16 @@ def buttons_profiles(name: str, uuid: str, has_keys: bool = True) -> InlineKeybo
     if has_keys and uuid:
         buttons.append([
             InlineKeyboardButton(
-                text="🔄 Обновить ключи",
+                text="🔄Обновить ключи",
                 callback_data=ConfirmUpdateKeys(name=name, uuid=uuid).pack()   # ← теперь подтверждение
             )
         ])
-    buttons.append([InlineKeyboardButton(text="← К профилям", callback_data="show_profiles")])
+    buttons.append([InlineKeyboardButton(text="⬅️К профилям", callback_data="show_profiles")])
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 def change_keys() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="Обновить ключи", callback_data=UpdateKeysCallback())]
+        [InlineKeyboardButton(text="🔄Обновить ключи", callback_data=UpdateKeysCallback())]
     ])
 
 
@@ -78,13 +78,13 @@ def confirm_change_keys(name: str, uuid: str) -> InlineKeyboardMarkup:
      return InlineKeyboardMarkup(inline_keyboard=[
         [
             InlineKeyboardButton(
-                text="✅ Да, обновить",
+                text="✅Да, обновить",
                 callback_data=UpdateKeysCallback(name=name, uuid=uuid).pack()
             )
         ],
         [
             InlineKeyboardButton(
-                text="❌ Отмена",
+                text="❌Отмена",
                 callback_data=ProfileCallback(name=name, uuid=uuid).pack()
             )
         ]

@@ -102,7 +102,6 @@ async def auto_rotate_keys_task(remna: RemnaClient, state:AutoRotateState):
 
             if not state.enabled:
                 await asyncio.sleep(30)
-                logger.info("Автообновления выключены")
                 continue
 
             run_time = state.target_time
