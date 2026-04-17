@@ -26,6 +26,15 @@ def settings_autoUpdateKeys(enabled: bool) -> InlineKeyboardMarkup:
             callback_data="on_off_auto_update_keys"
         )
     )
+
+    if enabled:
+        builder.row(
+            InlineKeyboardButton(
+                text="Изменить время автообновления",
+                callback_data="change_time_auto_update"
+            )
+        )
+
     builder.row(                                                                                                                                                                                                                              
           InlineKeyboardButton(                                                                                                                                                                                                                 
               text="Назад",                                                                                                                                                                                                                     
@@ -33,7 +42,13 @@ def settings_autoUpdateKeys(enabled: bool) -> InlineKeyboardMarkup:
         )                                                                                                                                                                                                                                     
     )   
     return builder.as_markup()                     
-   
+
+def back_to_auto_update_settings_kb():                                                                                                                                                                                
+      return InlineKeyboardMarkup(                                                                                                                                                                                      
+          inline_keyboard=[                                                                                                                                                                                             
+              [InlineKeyboardButton(text="Назад", callback_data="auto_update_keys")]                                                                                                                                                                                                         
+        ])  
+
 
 def back_to_menu_kb() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=[

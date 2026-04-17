@@ -42,7 +42,7 @@ async def main():
     client = RemnaClient(base_url=config.remna_base_url, token=config.remna_token)
     await client.start()
 
-    auto_rotate_state = AutoRotateState(enabled=True)
+    auto_rotate_state = AutoRotateState()
 
     dp.workflow_data["remna"] = client
     dp.workflow_data["auto_rotate_state"] = auto_rotate_state

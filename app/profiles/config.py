@@ -105,15 +105,9 @@ async def auto_rotate_keys_task(remna: RemnaClient, state:AutoRotateState):
                 logger.info("Автообновления выключены")
                 continue
 
-            run_time = time(hour=3, minute=-0, second=0)
+            run_time = state.target_time
             sleep_seconds = seconds_until_next_msk(run_time)
-            next_run_at = datetime.now(ZoneInfo("Europe/Moscow")) + timedelta(seconds=sleep_seconds)
-
-            logger.info(
-                "Следующее автообновление ключей запланировано на %s MSK",
-                next_run_at.strftime("%Y-%m-%d %H:%M:%S")
-            )
-
+    
             while sleep_seconds > 0:
                 if not state.enabled:                                                                                                                                                                                                         
                     break  

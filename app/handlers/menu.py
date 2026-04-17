@@ -1,11 +1,13 @@
 from aiogram import Router, F
-from aiogram.types import CallbackQuery
+from aiogram.types import CallbackQuery, Message
+from aiogram.fsm.context import FSMContext
+from datetime import datetime
 import logging
 
 
 from app.keyboards.inline import menu_kb, back_to_menu_kb, generate_profiles_button
 from app.keyboards.inline import buttons_profiles, confirm_change_keys
-from app.keyboards.inline import settings_func, settings_autoUpdateKeys
+from app.keyboards.inline import settings_func, settings_autoUpdateKeys, back_to_auto_update_settings_kb
 from app.services.remna_client import RemnaClient
 from app.services.remna_client import RemnaApiError
 from app.storage.profiles_store import set_keys, clear_keys
@@ -14,7 +16,7 @@ from app.storage.profiles_store import clear_store_config
 from app.callbacks.profiles import ProfileCallback, UpdateKeysCallback, ConfirmUpdateKeys
 from app.domain.xray import get_public_xray_key
 from app.profiles.config import rotate_profile_keys
-from app.settings.flags import AutoRotateState
+from app.settings.flags import AutoRotateState, SettingsState
 
 
 
@@ -131,9 +133,14 @@ async def show_settings(call: CallbackQuery):
 @router.callback_query(F.data == "auto_update_keys")                                                                                                                                                                                            
 async def show_settings_auto_update_keys(call: CallbackQuery, auto_rotate_state: AutoRotateState):                                                                                                                                            
       await call.answer()
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                
+
+      text = f"Настройки автообновления ключей:"
+
+      if auto_rotate_state.enabled:
+        text += f"\n\nОбновление произойдет в {auto_rotate_state.target_time}"  
+
       await call.message.edit_text(                                                                                                                                                                                                             
-          text="Настройки автообновления ключей:",                                                                                                                                                                    
+          text=text,                                                                                                                                                                    
           reply_markup=settings_autoUpdateKeys(auto_rotate_state.enabled)                                                                                                                                                                       
       )        
 
@@ -146,11 +153,41 @@ async def on_off_auto_update_keys(call: CallbackQuery, auto_rotate_state: AutoRo
 
     await call.answer(f"Автообновление {status_text}")
 
+    text = f"Настройки автообновления ключей:"
+
+    if auto_rotate_state.enabled:
+        text += f"\n\nОбновление произойдет в {auto_rotate_state.target_time}"
+
     await call.message.edit_text(
-        text="Настройки автообновления ключей:",
+        text=text,
         reply_markup=settings_autoUpdateKeys(auto_rotate_state.enabled)
     )
 
+@router.callback_query(F.data == "change_time_auto_update")
+async def change_time_auto_update(call: CallbackQuery, auto_rotate_state: AutoRotateState, state: FSMContext):
+    if not auto_rotate_state.enabled:
+        await call.message.edit_text(
+        text="Настройки автообновления ключей:",
+        reply_markup=settings_autoUpdateKeys(auto_rotate_state.enabled)
+    )
+    await state.set_state(SettingsState.waiting_auto_rotate_time) 
+    await call.message.answer("Введи время в формате HH:MM, например 03:00")  
+    await call.answer()  
+
+    
+@router.message(SettingsState.waiting_auto_rotate_time)
+async def process_auto_rotate_time(message: Message, state: FSMContext, auto_rotate_state: AutoRotateState):
+    user_text = message.text.strip()
+
+    try:
+        parsed_time = datetime.strptime(user_text, "%H:%M").time()
+    except ValueError:                                                                                                                                                                                                
+        await message.answer("Неверный формат. Введи время как HH:MM, например 03:00")                                                                                                                                
+        return
+    
+    auto_rotate_state.target_time = parsed_time
+    await state.clear()
+    await message.answer(f"Новое время автообновления: {parsed_time.strftime('%H:%M')}", reply_markup=back_to_auto_update_settings_kb())   
 
 @router.callback_query(ProfileCallback.filter())
 async def profile_actions(
