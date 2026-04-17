@@ -1,6 +1,5 @@
 from aiogram import Router, F
 from aiogram.types import CallbackQuery
-import subprocess
 import logging
 
 
@@ -9,108 +8,17 @@ from app.keyboards.inline import buttons_profiles, confirm_change_keys
 from app.services.remna_client import RemnaClient
 from app.services.remna_client import RemnaApiError
 from app.storage.profiles_store import set_keys, clear_keys
-from app.storage.profiles_store import  delete_profile_keys, get_profile, clear_profile_keys, set_profile_keys, get_profile_keys, set_profile
-from app.storage.profiles_store import get_store_config, clear_store_config
+from app.storage.profiles_store import clear_profile_keys, set_profile_keys, get_profile_keys, set_profile
+from app.storage.profiles_store import clear_store_config
 from app.callbacks.profiles import ProfileCallback, UpdateKeysCallback, ConfirmUpdateKeys
+from app.domain.xray import get_public_xray_key
+from app.profiles.config import rotate_profile_keys
 
 
 
 router = Router()
 logger = logging.getLogger(__name__)
 
-
-
-def get_public_xray_key(private_key: str) -> str:
-    result = subprocess.check_output(["xray", "x25519", "-i", f"{private_key}"], text=True)
-    public_key = result.split("Public key: ")[1].splitlines()[0].strip()
-    return public_key
-
-
-def generate_xray_keys() -> dict[str, str]:
-    result = subprocess.check_output(["xray", "x25519"], text=True)
-    private_key = result.split("Private key: ")[1].splitlines()[0].strip()
-    public_key = result.split("Public key: ")[1].splitlines()[0].strip()
-
-    return {public_key: private_key}
-
-
-def update_config_inbounds(config: dict, private_key: str) -> bool:
-    for inbound in config.get("inbounds", []):
-        stream = inbound.get("streamSettings", {})
-        if stream.get("security") == "reality":
-            reality = stream.setdefault("realitySettings", {})
-            if reality.get("privateKey"):
-                reality["privateKey"] = private_key
-                return True
-    return False
-
-def update_config_outbounds(config: dict, new_public_key: str, old_public_key: str) -> bool:
-    for outbound in config.get("outbounds", []):
-        stream = outbound.get("streamSettings", {})
-        if stream.get("security") == "reality":
-            reality = stream.setdefault("realitySettings", {})
-            if reality.get("publicKey") == old_public_key:
-                reality["publicKey"] = new_public_key
-                return True
-    return False
-
-async def restore_configs(configs: dict, remna: RemnaClient):
-    for sub_uuid, conf in configs.items():
-        payload = {
-            "config": conf,
-            "uuid": sub_uuid
-        }
-        try:
-            await remna.update_xray_keys_in_profile(payload)
-        except RemnaApiError as e:
-            logger.exception("Ошибка возврата профиля %s: %s", sub_uuid, e)
-
-
-
-async def rotate_profile_keys(uuid: str, remna: RemnaClient) -> tuple[str, str]:
-    config = get_profile(uuid)
-    if not config:
-        raise ValueError(f"Профиль {uuid} не найден в локальном хранилище")
-
-    old_keys = get_profile_keys(uuid)
-    if not old_keys:
-        raise ValueError(f"Для профиля {uuid} не найдены текущие ключи")
-
-    old_public_key, _ = next(iter(old_keys.items()))
-
-    new_keys = generate_xray_keys()
-    new_public_key, new_private_key = next(iter(new_keys.items()))
-
-    configs = get_store_config()
-
-    updated = update_config_inbounds(config, new_private_key)
-    if not updated:
-        raise ValueError(f"Reality inbound не найден в профиле {uuid}")
-
-    try:
-        for sub_uuid, conf in configs.items():
-            sub_updated = update_config_outbounds(conf, new_public_key, old_public_key)
-            if sub_updated:
-                payload = {
-                    "config": conf,
-                    "uuid": sub_uuid
-                }
-                await remna.update_xray_keys_in_profile(payload)
-
-        payload = {
-            "config": config,
-            "uuid": uuid
-        }
-        await remna.update_xray_keys_in_profile(payload)
-
-    except RemnaApiError:
-        await restore_configs(configs, remna)
-        raise
-
-    delete_profile_keys(uuid)
-    set_profile_keys(uuid, new_keys)
-
-    return new_public_key, new_private_key
 
 
 @router.callback_query(F.data == "menu")

@@ -24,7 +24,6 @@ def loadConfig() -> Config:
     if not remna_url or not remna_port or not remna_token:
         raise RuntimeError("Нет UTL_PANEL / PORT_PANEL / API_TOKEN в .env")
 
-    # ←←← НОВЫЙ ПАРСИНГ СПИСКА ID ←←←
     allowed_str = os.getenv("ALLOWED_USER_IDS", "").strip()
     allowed_user_ids: List[int] = []
     
